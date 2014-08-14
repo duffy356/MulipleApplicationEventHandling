@@ -1,0 +1,7 @@
+
+    {
+        "messagetype" : "REG_REQ",
+        "maehUser" : "Mustermann1@example.com",
+        "maehApplication" : "Musteranwendung1"
+    }
+

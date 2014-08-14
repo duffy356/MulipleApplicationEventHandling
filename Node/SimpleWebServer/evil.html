@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>WebSocket Echo Client</title>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="css/reset.css" />
+    <link rel="stylesheet" href="css/960.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js" ></script>
+    <script type="text/javascript" src="http://localhost:8080/js/Utils.js"></script>
+    <script type="text/javascript" src="http://localhost:8080/js/MAEHWebsocket.js"></script>
+    <script type="text/javascript">
+        var maehSocket = null;
+
+        // Initialize everything when the window finishes loading
+        $(window).load(function() {
+            maehSocket = new MAEHWebsocket("ws://localhost:13337", "evil", "evilApp");
+            maehSocket.connect();
+        });
+
+        $("#sendButton").click(function() {
+            var mess = new MAEHMessage("");
+            maehSocket.send(mess);
+        });
+
+
+    </script>
+</head>
+<body>
+<div class="container_12">
+    <input id="sendButton" type="button" value="send" />
+</div>
+</body>
+</html>

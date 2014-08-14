@@ -1,0 +1,16 @@
+
+    {
+        "messagetype" : "STATELESS_REG_RES",
+        "maehWebsocketId" : 1,
+        "newCallbacks": [
+            {
+                "name" : "callbackAktion1",
+                "id" : 1
+            },
+            {
+                "name" : "callbackAktion2",
+                "id" : 2
+            }
+        ]
+    }
+

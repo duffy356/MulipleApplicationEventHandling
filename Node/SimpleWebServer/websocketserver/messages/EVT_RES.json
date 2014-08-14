@@ -1,0 +1,9 @@
+
+    {
+        "messagetype" : "EVT_RES",
+        "receivers" : 2,
+        "callback" : "callbackAktion1"
+    }
+
+
+

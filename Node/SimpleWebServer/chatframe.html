@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>WebSocket Echo Client</title>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="css/reset.css" />
+	<link rel="stylesheet" href="css/960.css" />
+	<link rel="stylesheet" href="css/style.css" />
+	<script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js" ></script>
+    <script type="text/javascript" src="http://localhost:8080/js/Utils.js"></script>
+    <script type="text/javascript" src="http://localhost:8080/js/MAEHWebsocket.js"></script>
+    <script type="text/javascript">
+        var maehSocket = null;
+
+        function enableFields(connected) {
+            /* Enable and Disalbe the Buttons */
+            $('#sendMessageButton').attr("disabled", !connected);
+
+            /* Enable and Disable the Fields */
+            $('#radiouserappUsername').prop("disabled", !connected);
+        }
+
+        function addMessage(log) {
+            var msg = null;
+
+            if (typeof (log) === "string") {
+                msg = log;
+            } else if (log instanceof ReceivedMessage) {
+                if (log.getCallbackName() === "chatmessage") {
+                    msg = log.getProperty("message");
+                }
+            } else if (log instanceof ReceivedResponse) {
+                if (log.getCallback() === "chatmessage") {
+                    msg = "Message sent to " + log.getReceivers() + " Clients";
+                }
+            }
+
+            if (msg != null) {
+                $("#logger").append("<p>" + msg + "</p>");
+            }
+
+        }
+
+        function maehSocketStateChanged(newState) {
+            var color = null;
+            var newText = null;
+
+            switch (newState) {
+                case WebSocket.OPEN:
+                        color = 'LIGHTGREEN';
+                        newText = 'Connected';
+                        break;
+                case WebSocket.CLOSED:
+                        color = 'ORANGE';
+                        newText = 'Not Connected';
+                        break;
+                case WebSocket.CLOSING:
+                        color = 'RED';
+                        newText = 'Closing';
+                        break;
+                case WebSocket.CONNECTING:
+                        color = 'YELLOW';
+                        newText = 'Connecting';
+                        break;
+            }
+            if (color != null
+                    && newText != null) {
+                $("#stateInformer").css('color', color);
+                $("#stateInformer").html(newText);
+            }
+            enableFields(newState === WebSocket.OPEN);
+        }
+
+        // Initialize everything when the window finishes loading
+        $(window).load(function() {
+            enableFields(false);
+            if (maehSocket == null) {
+                maehSocket = new MAEHWebsocket("ws://localhost:13337", "tester2", "chatframe");
+                maehSocket.addCallback(new Callback("chatmessage", addMessage));
+                maehSocket.setStateChangerCallback(maehSocketStateChanged);
+                maehSocket.connect();
+            }
+        });
+
+        // Send messageString to the server when the Send button is clicked
+        $(document).ready(function() {
+            $("#sendMessageButton").click(function() {
+                // create MAEHMessage
+                var maehMessage = new MAEHMessage("chatmessage");
+                var receiver1 = new MAEHMessageReceiver();
+                receiver1.receivertype = 'BROADCAST';
+                receiver1.callback = "chatmessage";
+                maehMessage.addReceiver(receiver1);
+                var msg = Utils.getActTime()
+                            + " "
+                            + maehSocket.getUser()
+                            + ": "
+                            + $("#message").val();
+
+                addMessage(msg);
+                maehMessage.data.message = msg;
+                maehSocket.send(maehMessage);
+            });
+        });
+    </script>
+</head>
+<body>
+	<div class="container_12 connectionstate" style="min-height: 366px;">
+        <table>
+            <tr>
+                <td colspan="3">
+                    <span id="stateInformer"></span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="message">Nachricht eingeben:</label>
+                </td>
+                <td>
+                    <input id="message" style="width: 100%;" type="text"/>
+                </td>
+                <td>
+                    <input id="sendMessageButton" type="button" value="Senden" />
+                </td>
+            </tr>
+                <td colspan="3">
+                    <label for="logger">Empfangene Nachrichten</label>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <span id="logger"></span>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

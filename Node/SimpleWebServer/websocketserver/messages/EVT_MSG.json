@@ -1,0 +1,15 @@
+
+    {
+        "messagetype" : "EVT_MSG",
+        "senderId" : 0,
+        "callback" : "callbackAktion1",
+        "data" : {
+            "someAttribute" : "www.w3schools.com",
+            "anyAttribute" : "test",
+            "summand1" : "42",
+            "summand2" : "4711"
+        }
+    }
+
+
+

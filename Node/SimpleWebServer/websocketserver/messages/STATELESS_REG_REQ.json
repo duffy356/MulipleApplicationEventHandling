@@ -1,0 +1,8 @@
+
+    {
+        "messagetype" : "STATELESS_REG_REQ",
+        "maehUser" : "Mustermann2@example.com",
+        "maehApplication" : "Musteranwendung2",
+        "newCallbacks" : ["callbackAktion1", "callbackAktion2"]
+    }
+

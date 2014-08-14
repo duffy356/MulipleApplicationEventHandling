@@ -1,0 +1,27 @@
+
+    {
+        "messagetype" : "EVT_REQ",
+        "callbackName" : "someCallback",
+        "receivers" : [
+            {
+                "receivertype" : "USERAPPLICATION",
+                "callback" : "callbackAktion1",
+                "username" : "Mustermann2@example.com",
+                "application" : "Musteranwendung2"
+            }
+        ],
+        "data": {
+            "someAttribute" : "www.w3schools.com",
+            "anyAttribute" : "test",
+            "summand1" : "42",
+            "summand2" : "4711"
+        }
+    }
+
+
+
+
+
+
+
+

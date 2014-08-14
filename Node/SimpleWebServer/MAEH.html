@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>WebSocket Echo Client</title>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="css/reset.css" />
+    <link rel="stylesheet" href="css/960.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js" ></script>
+    <script type="text/javascript" src="http://localhost:8080/js/Utils.js"></script>
+    <script type="text/javascript">
+        function clearMessages() {
+            $("#logger").empty();
+        }
+
+        function addMessage(log) {
+            $("#logger").append("<p>" + log + "</p>");
+        }
+
+        function addErrorMessage(log) {
+            $("#logger").append("<p class='red'>" + log + "</p>");
+        }
+
+        function enableFields(connected) {
+
+            /* Enable and Disalbe the Buttons */
+            $('#connectButton').attr("disabled", connected);
+            $('#disconnectButton').attr("disabled", !connected);
+            $('#addCallbackButton').attr("disabled", !connected);
+            $('#removeCallbackButton').attr("disabled", !connected);
+            $('#sendMessageButton').attr("disabled", !connected);
+
+            /* Enable and Disable the Fields */
+            $('#maehUser').prop("disabled", connected);
+            $('#maehApplication').prop("disabled", connected);
+            $('#url').prop("disabled", connected);
+
+            $('#callbackName').prop("disabled", !connected);
+            $('#receiverCallback').prop("disabled", !connected);
+            $('#messageString').prop("disabled", !connected);
+
+
+            /* The Radiobuttongroup */
+            $('input[name=receivertype]').prop("disabled", !connected);
+
+            /* enable fields of radiobuttons */
+            if (connected) {
+                var selectedRadio = $("input[type='radio'][name='receivertype']:checked").val();
+
+                $('#radiousername').prop("disabled", connected);
+                $('#radioappname').prop("disabled", connected);
+                $('#radiouserappUsername').prop("disabled", connected);
+                $('#radiouserappAppname').prop("disabled", connected);
+
+                switch (selectedRadio) {
+                    case "USER":
+                        $('#radiousername').prop("disabled", false);
+                        break;
+                    case "APPLICATION":
+                        $('#radioappname').prop("disabled", false);
+                        break;
+                    case "USERAPPLICATION":
+                        $('#radiouserappUsername').prop("disabled", false);
+                        $('#radiouserappAppname').prop("disabled", false);
+                        break;
+                }
+            } else {
+                $('#radiousername').prop("disabled", !connected);
+                $('#radioappname').prop("disabled", !connected);
+                $('#radiouserappUsername').prop("disabled", !connected);
+                $('#radiouserappAppname').prop("disabled", !connected);
+            }
+        }
+
+        function getReceivers() {
+            var receivers = [];
+            var receiver = {};
+
+            var selectedRadioButton = undefined;
+            var selectedRadio = $("input[type='radio'][name='receivertype']:checked");
+            if (selectedRadio.length > 0) {
+                selectedRadioButton = selectedRadio.val();
+            }
+
+            receiver.receivertype = selectedRadioButton;
+            receiver.callback = $("#receiverCallback").val();
+
+            switch (receiver.receivertype) {
+                case "USER":
+                    receiver.username = $("#radiousername").val();
+                    break;
+                case "APPLICATION":
+                    receiver.application = $("#radioappname").val();
+                    break;
+                case "USERAPPLICATION":
+                    receiver.username = $("#radiouserappUsername").val();
+                    receiver.application = $("#radiouserappAppname").val();
+                    break;
+            }
+
+            receivers.push(receiver);
+
+            return receivers;
+        }
+
+        // Initialize everything when the window finishes loading
+        $(window).load(function() {
+            var socket;
+
+            $("#status").html("Not Connected");
+            $("#url").val("ws://localhost:13337");
+            $("#maehUser").val("WebUser");
+            $("#maehApplication").val("WebApp");
+            $("#messageString").val("{message : 'testmessage'}");
+            $("#callbackName").val("chatmessage");
+            $("#receiverCallback").val("chatmessage");
+
+            enableFields(false);
+
+            // Create a new connection when the Connect button is clicked
+            $("#connectButton").click(function() {
+                $('#connectButton').attr("disabled", true);
+                try {
+                    clearMessages();
+                    socket = new WebSocket($("#url").val());
+
+                    // When Socket is opened -> Handshake ok
+                    socket.onopen = function (event) {
+                        if ($('#debugEnabled').prop('checked')) {
+                            addMessage("Open: " + JSON.stringify(event, null, 4));
+                        }
+                        // Enable Fields and set State
+                        enableFields(true);
+                        $("#status").html("Connected");
+                        $("#status").css('color', 'LIGHTGREEN');
+
+                        // set user and app of socket
+                        socket.maehUser = $("#maehUser").val();
+                        socket.maehApplication = $("#maehApplication").val();
+                        socket.callbacks = {};
+
+                        // Send Registermessage
+                        var reg_req = {};
+                        reg_req.messagetype = 'REG_REQ';
+                        reg_req.maehUser = socket.maehUser;
+                        reg_req.maehApplication = socket.maehApplication;
+
+                        if ($('#debugEnabled').prop('checked')) {
+                            addMessage(JSON.stringify(reg_req));
+                        }
+                        socket.send(JSON.stringify(reg_req));
+                    };
+
+                    // Handle messages received from the server
+                    socket.onmessage = function (event) {
+                        if ($('#debugEnabled').prop('checked')) {
+                            addMessage(JSON.stringify(event.data, null, 4));
+                        }
+                        var data = JSON.parse(event.data);
+                        if (data.messagetype === "REG_RES") {
+                            // Handle Registration Message
+                            socket.maehWebsocketId = data.maehWebsocketId;
+                        } else if (data.messagetype === "INT_RES") {
+                            // Handle CallbackIntend Response
+                            // neue CallbackIntend hinzufügen
+                            // entfernen
+                            if (Utils.isArray(data.newCallbacks)) {
+                                for (var i = 0, len = data.newCallbacks.length; i < len; i++) {
+                                    // Add Callback to dynamic Table
+                                    $('#callbackTable').append(
+                                                    '<tr id=' + data.newCallbacks[i].name + '>' +
+                                                    '<td>' + data.newCallbacks[i].name + '</td>' +
+                                                    '<td>' + data.newCallbacks[i].id + '</td>' +
+                                                    '</tr>');
+                                }
+                            }
+                            if (Utils.isArray(data.removedCallbacks)) {
+                                for (var i = 0, len = data.removedCallbacks.length; i < len; i++) {
+                                    // Drop Callback from dynamic Table
+                                    $('table#callbackTable tr#' + data.removedCallbacks[i].name).remove();
+                                }
+                            }
+                        } else if (data.messagetype === 'EVT_MSG') {
+                            if (data.callback === 'chatmessage') {
+                                addMessage(Utils.getActTime() + " Received Text: " + data.data.message);
+                            } else {
+                                addMessage("no action for " + data.callback + " implemented");
+                            }
+                        } else if (data.messagetype === 'EVT_RES') {
+                            if (data.callback === 'chatmessage') {
+                                addMessage(Utils.getActTime() + " Message sent to " + data.receivers + " clients");
+                            } else {
+                                addMessage("no action for " + data.callback + " implemented");
+                            }
+                        }
+                    };
+
+                    // Display any errors that occur
+                    socket.onerror = function (event) {
+                        addErrorMessage("Error: " + JSON.stringify(event, null, 4));
+                        $("#status").html("Error");
+                        $("#status").css('color', 'RED');
+                    };
+
+                    socket.onclose = function (event) {
+                        addMessage("Close: " + JSON.stringify(event, null, 4));
+                        $("#status").html("Closed");
+                        $("#status").removeAttr('style');
+                        enableFields(false);
+                    };
+
+                } catch (e) {
+                    addErrorMessage(e.message);
+                    enableFields(false);
+                }
+
+            });
+
+            // Close the connection when the Disconnect button is clicked
+            $("#disconnectButton").click(function() {
+                socket.close();
+            });
+
+            // Send messageString to the server when the Send button is clicked
+            $("#sendMessageButton").click(function() {
+                // create MAEHMessage
+                var evt_req = {};
+                evt_req.messagetype = "EVT_REQ";
+                // Get Receiver from function
+                evt_req.receivers = getReceivers();
+                evt_req.callback = $("#receiverCallback").val();
+
+                // Parse Messageobject from textarea
+                try {
+                    var jsonMessageString = JSON.stringify(eval("(" + $('#messageString').val() + ")"));
+                    evt_req.data = JSON.parse(jsonMessageString);
+                } catch (e) {
+                    addErrorMessage(e.message);
+                    evt_req.data = null;
+                }
+
+                if (evt_req.data != null) {
+                    if ($('#debugEnabled').prop('checked')) {
+                        addMessage(JSON.stringify(evt_req));
+                    }
+                    socket.send(JSON.stringify(evt_req));
+                }
+            });
+
+            $("#addCallbackButton").click(function() {
+                var int_req = {};
+                int_req.messagetype = 'INT_REQ';
+                int_req.maehWebsocketId = socket.maehWebsocketId;
+                int_req.newCallbacks = [];
+                int_req.newCallbacks.push($("#callbackName").val());
+
+                if ($('#debugEnabled').prop('checked')) {
+                    addMessage(JSON.stringify(int_req));
+                }
+                socket.send(JSON.stringify(int_req));
+
+            });
+
+            $("#removeCallbackButton").click(function() {
+                var int_req = {};
+                int_req.messagetype = 'INT_REQ';
+                int_req.maehWebsocketId = socket.maehWebsocketId;
+                int_req.removedCallbacks = [];
+                int_req.removedCallbacks.push($("#callbackName").val());
+
+                if ($('#debugEnabled').prop('checked')) {
+                    addMessage(JSON.stringify(int_req));
+                }
+                socket.send(JSON.stringify(int_req));
+            });
+        });
+    </script>
+</head>
+<body class="container_12">
+    <h1>MAEH - Multiple Application Eventhandling</h1>
+    <div class="grid_4">
+        <div class="registration">
+            <h2>Register on Server</h2>
+            <input type="checkbox" id="debugEnabled"/>
+            <label for="debugEnabled">Debug</label>
+            <table>
+                <tr>
+                    <td>
+                        Status
+                    </td>
+                    <td>
+                        <span class="right" id="status"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="maehUser">User</label>
+                    </td>
+                    <td>
+                        <input class="right" id="maehUser"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="maehApplication">Application</label>
+                    </td>
+                    <td>
+                        <input class="right" id="maehApplication"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="url">URL</label>
+                    </td>
+                    <td>
+                        <input class="right" id="url" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input id="connectButton" type="button" value="Connect" />
+                    </td>
+                    <td>
+                        <input class="right" id="disconnectButton" type="button" value="Disconnect" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="callbacks">
+            <h2>Set up Callbacks</h2>
+            <table>
+                <tr>
+                    <td>
+                        <label for="callbackName">Name of Callback</label>
+                    </td>
+                    <td>
+                        <input class="right" id="callbackName"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td><input id="addCallbackButton" type="button" value="Add Callback" /></td>
+                    <td><input id="removeCallbackButton" class="right" type="button" value="Remove Callback" /></td>
+                </tr>
+            </table>
+            <h3>Registered Callbacks of this Client</h3>
+            <table id="callbackTable">
+            </table>
+        </div>
+    </div>
+    <div class="grid_8">
+        <div class="events">
+            <h2>Send Message</h2>
+            Receiver:<br/>
+            <table>
+                <tr>
+                    <td colspan="2" style="width:50%">
+                        <label for="receiverCallback">Callback of Message Receivers</label>
+                    </td>
+                    <td colspan="2" style="width:50%">
+                        <input id="receiverCallback" type="text"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <input id="radiobc" type="radio" name="receivertype" value="BROADCAST" onclick="enableFields(true)" checked/>
+                        <label for="radiobc">Broadcast</label>
+                    </td>
+                    <td colspan="2">
+                        <input id="radiouser" type="radio" name="receivertype" value="USER" onclick="enableFields(true)"/>
+                        <label for="radiouser">to User</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2"></td>
+                    <td>
+                        <label for="radiousername">User</label>
+                    </td>
+                    <td class="right">
+                        <input id="radiousername" type="text"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <input id="radioapp" type="radio" name="receivertype" value="APPLICATION" onclick="enableFields(true)"/>
+                        <label for="radioapp">to all Users of Application</label>
+                    </td>
+                    <td colspan="2">
+                        <input id="radiouserapp" type="radio" name="receivertype" onclick="enableFields(true)" value="USERAPPLICATION"/>
+                        <label for="radiouserapp">to specific User and Application</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="radioappname">Application</label>
+                    </td>
+                    <td>
+                        <input id="radioappname" type="text"/>
+                    </td>
+                    <td>
+                        <label for="radiouserappUsername">User</label>
+                    </td>
+                    <td>
+                        <input id="radiouserappUsername" type="text"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2"></td>
+                    <td>
+                        <label for="radiouserappAppname">Application</label>
+                    </td>
+                    <td>
+                        <input id="radiouserappAppname" type="text"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4">
+                        <label for="messageString">Message</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4">
+                        <textarea id="messageString" style="width:100%" rows="4"></textarea>
+                    </td>
+                </tr>
+            </table>
+            <input id="sendMessageButton" type="button" value="Send" />
+        </div>
+    </div>
+
+    <div class="grid_12 logger">
+        <input id="clearButton" type="button" value="Clear" onclick="clearMessages()" />
+        <span id="logger"></span>
+    </div>
+</body>
+</html>

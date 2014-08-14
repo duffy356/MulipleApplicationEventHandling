@@ -1,0 +1,8 @@
+
+    {
+        "messagetype" : "INT_REQ",
+        "maehWebsocketId" : 0,
+        "newCallbacks" : ["callbackAktion1", "callbackAktion2"],
+        "removedCallbacks" : ["callbackAktion3", "callbackAktion4"]
+    }
+

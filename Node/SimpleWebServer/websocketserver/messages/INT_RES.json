@@ -1,0 +1,25 @@
+
+    {
+        "messagetype" : "INT_RES",
+        "newCallbacks" : [
+            {
+                "name" : "callbackAktion1",
+                "id" : 0
+            },
+            {
+                "name" : "callbackAktion2",
+                "id" : 1
+            }
+        ],
+        "removedCallbacks" : [
+            {
+                "name" : "callbackAktion3",
+                "id" : -1
+            },
+            {
+                "name" : "callbackAktion4",
+                "id" : -1
+            }
+        ]
+    }
+

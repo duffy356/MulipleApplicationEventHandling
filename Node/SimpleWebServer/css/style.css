@@ -1,0 +1,80 @@
+@CHARSET "ISO-8859-1";
+
+.right {
+    float: right;
+}
+
+.red {
+    color: red;
+}
+
+.content {
+	background-color: #756A3D;
+}
+
+.menu {
+	background-color: #FFF2BC;
+}
+
+ul, li {
+	margin:0;
+    padding:0;
+    list-style-type:none;
+}
+
+
+.registration {
+    background-color: #756A3D;
+    color: #e5e5e4;
+    padding: 5px;
+}
+
+.connectionstate {
+    background-color: #756A3D;
+    color: #e5e5e4;
+    position: relative;
+}
+
+#state {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 5px;
+    font-weight: bold;
+}
+
+#stateInformer {
+    font-weight: bold;
+}
+
+.callbacks {
+    background-color: #C2AD65;
+    padding: 5px;
+}
+
+.events {
+    background-color: #29433E;
+    padding: 5px;
+    color: #e5e5e4;
+}
+
+.logger {
+    padding: 25px;
+    font: 0.8em "Courier New", Courier, monospace;
+}
+
+body {
+    font: 1em "HelveticaNeue-Light","Helvetica Neue Light","Helvetica Neue",Helvetica,Arial,"Lucida Grande",sans-serif;
+    background-color: #FFF2BC;
+}
+
+td {
+    padding: 10px,0,10px,0;
+    vertical-align:middle;
+}
+
+table {
+    width: 100%;
+    border-spacing: 10px;
+    border-collapse: separate;
+}
