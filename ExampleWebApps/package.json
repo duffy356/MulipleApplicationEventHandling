@@ -1,0 +1,10 @@
+{
+    "name": "ExampleWebApps",
+    "version": "0.1.0",
+    "description": "Some example Webpages, which use MAEH to send an receive Events from the MAEHWebSocketServer.",
+    "author": "Dominik Bauer <duffy356@gmail.com>",
+    "repository" :
+    { "type" : "git",
+        "url" : "https://github.com/duffy356/MulipleApplicationEventHandling.git"
+    }
+}

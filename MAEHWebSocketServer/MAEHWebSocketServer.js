@@ -31,7 +31,7 @@ var port = 13337;
 var wss = new WebSocketServer({port: port});
 
 // Load the library for utility functions
-var utils = require('./../js/Utils');
+var utils = require('./js/Utils');
 
 // Set sequences and debug-mode
 var seq_maehWebsocketId = 0, seq_callbackid = 0;

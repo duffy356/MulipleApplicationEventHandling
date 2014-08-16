@@ -47,5 +47,5 @@ target/
 ################
 # Node
 ################
-node_modules/
+MAEHWebSocketServer/node_modules
 .jshintrc

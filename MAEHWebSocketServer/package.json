@@ -1,0 +1,14 @@
+{
+  "name": "MAEHWebSocketServer",
+  "version": "0.1.0",
+  "description": "A WebSocketServer based on the node.js-module 'ws'. It handles the messages for the clients.",
+  "author": "Dominik Bauer <duffy356@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+	  "ws" : ">=0.4.32"
+  },
+  "repository" :
+  { "type" : "git",
+    "url" : "https://github.com/duffy356/MulipleApplicationEventHandling.git"
+  }
+}
